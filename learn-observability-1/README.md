@@ -40,3 +40,10 @@ http://192.168.33.10:9090/
 docker run --name grafana -d -p 3000:3000 grafana/grafana
 ```
 http://192.168.33.10:3000/
+
+
+
+## customization endpoint
+
+参考：  
+https://blog.csdn.net/LightOfMiracle/article/details/80594795  
