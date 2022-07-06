@@ -44,6 +44,94 @@ http://192.168.33.10:3000/
 
 
 ## customization endpoint
+1. create endpoint
+com.example.learn.observability.endpoint.LogStatsEndpoint  
+2. Use @Bean injected into Spring IOC
+```
+@Bean
+public LogStatsEndpoint orderStatsEndpoint(){
+    return new LogStatsEndpoint();
+}
+```
+3. exposure endpoint
+```
+management:
+  endpoints:
+    web:
+      exposure:
+        include: logStats
+```
+4. visit the endpoint
+- @ReadOperation
+http://127.0.0.1:8080/actuator/logStats  
+http://127.0.0.1:8080/actuator/logStats/error  
+- @WriteOperation
+```
+curl -X POST -d '{"logLevel":"error","records":"0"}' --header "Content-Type: application/json" http://127.0.0.1:8080/actuator/logStats
+```
 
 参考：  
 https://blog.csdn.net/LightOfMiracle/article/details/80594795  
+
+
+# Reading Source Code 
+## default expose endpoints of different types
+org.springframework.boot.actuate.autoconfigure.endpoint.web.WebEndpointAutoConfiguration.webExposeExcludePropertyEndpointFilter  
+org.springframework.boot.actuate.autoconfigure.endpoint.expose.EndpointExposure  
+
+## 处理@Endpoint流程
+总入口：org.springframework.boot.actuate.autoconfigure.endpoint.web.servlet.WebMvcEndpointManagementContextConfiguration.webEndpointServletHandlerMapping  
+
+1. 查找并生成ExposableWebEndpoint列表
+org.springframework.boot.actuate.autoconfigure.endpoint.web.WebEndpointAutoConfiguration.webEndpointDiscoverer
+org.springframework.boot.actuate.endpoint.annotation.EndpointDiscoverer.getEndpoints
+
+2. 生成并注册RequestMappingInfo
+- org.springframework.boot.actuate.endpoint.web.servlet.AbstractWebMvcEndpointHandlerMapping.initHandlerMethods  
+- org.springframework.boot.actuate.endpoint.web.servlet.AbstractWebMvcEndpointHandlerMapping.registerMapping  
+- org.springframework.boot.actuate.endpoint.web.servlet.AbstractWebMvcEndpointHandlerMapping.createRequestMappingInfo  
+
+流程总结：  
+- 扫描所有@Endpoint注解的类，这些类都是Endpoint；
+- 使用过滤器对Endpoint对象进行过滤，没有被过滤掉的才可以进入下一步；
+- 读取Endpoint对象的每个方法，判断是否有@ReadOperation、@WriteOperation、@DeleteOperation三个注解，如果有，则针对每个被注解的方法创建操作对象Operation；
+- 根据操作对象、Endpoint对象、Endpoint名创建为RequestMappingInfo，并将其注册到spring mvc中；
+- 注册成功之后，Endpoint对象便可以对外提供服务。 
+
+# Learned Knowledge
+# Get properties with Environment
+org.springframework.boot.actuate.autoconfigure.endpoint.EndpointIdTimeToLivePropertyFunction.apply
+```
+@Override
+public Long apply(EndpointId endpointId) {
+    String name = String.format("management.endpoint.%s.cache.time-to-live", endpointId.toLowerCaseString());
+    BindResult<Duration> duration = Binder.get(this.environment).bind(name, DURATION);
+    return duration.map(Duration::toMillis).orElse(null);
+}
+```
+# ConditionalOnEnabledHealthIndicator 实现原理
+org.springframework.boot.actuate.autoconfigure.health.OnEnabledHealthIndicatorCondition  
+org.springframework.boot.actuate.autoconfigure.OnEndpointElementCondition.getMatchOutcome  
+
+org.springframework.boot.actuate.autoconfigure.OnEndpointElementCondition.getEndpointOutcome：  
+```
+protected ConditionOutcome getEndpointOutcome(ConditionContext context, String endpointName) {
+    Environment environment = context.getEnvironment();
+    String enabledProperty = this.prefix + endpointName + ".enabled";
+    if (environment.containsProperty(enabledProperty)) {
+        // 默认为true，所有无需为每个health的endpoint配置：management.health.{具体health名称}.enabled=true
+        boolean match = environment.getProperty(enabledProperty, Boolean.class, true);
+        return new ConditionOutcome(match, ConditionMessage.forCondition(this.annotationType)
+                .because(this.prefix + endpointName + ".enabled is " + match));
+    }
+    return null;
+}
+
+```
+
+# Reference 
+1. spring boot Actuator原理详解之启动
+https://blog.csdn.net/weixin_38308374/article/details/114273724
+
+2. Spring Boot Actuator
+https://howtodoinjava.com/spring-boot/actuator-endpoints-example/
