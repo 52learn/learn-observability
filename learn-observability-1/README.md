@@ -98,6 +98,36 @@ org.springframework.boot.actuate.endpoint.annotation.EndpointDiscoverer.getEndpo
 - 根据操作对象、Endpoint对象、Endpoint名创建为RequestMappingInfo，并将其注册到spring mvc中；
 - 注册成功之后，Endpoint对象便可以对外提供服务。 
 
+## Spring容器中扫描HealthContributor实例并加入DefaultHealthContributorRegistry流程
+- Declare @Bean of HealthContributorRegistry , get all HealthContributor instance in IOC  assign to variable healthContributors
+```
+	@Bean
+	@ConditionalOnMissingBean
+	HealthContributorRegistry healthContributorRegistry(ApplicationContext applicationContext,
+			HealthEndpointGroups groups) {
+		Map<String, HealthContributor> healthContributors = new LinkedHashMap<>(
+				applicationContext.getBeansOfType(HealthContributor.class));
+		if (ClassUtils.isPresent("reactor.core.publisher.Flux", applicationContext.getClassLoader())) {
+			healthContributors.putAll(new AdaptedReactiveHealthContributors(applicationContext).get());
+		}
+		return new AutoConfiguredHealthContributorRegistry(healthContributors, groups.getNames());
+	}
+```
+- initialize AutoConfiguredHealthContributorRegistry object with healthContributors 
+```
+	DefaultContributorRegistry(Map<String, C> contributors, Function<String, String> nameFactory) {
+		Assert.notNull(contributors, "Contributors must not be null");
+		Assert.notNull(nameFactory, "NameFactory must not be null");
+		this.nameFactory = nameFactory;
+		Map<String, C> namedContributors = new LinkedHashMap<>();
+		contributors.forEach((name, contributor) -> namedContributors.put(nameFactory.apply(name), contributor));
+		this.contributors = Collections.unmodifiableMap(namedContributors);
+	}
+```
+
+org.springframework.boot.actuate.autoconfigure.health.HealthEndpointConfiguration.healthContributorRegistry
+org.springframework.boot.actuate.health.DefaultContributorRegistry.DefaultContributorRegistry(java.util.Map<java.lang.String,C>, java.util.function.Function<java.lang.String,java.lang.String>)
+
 # Learned Knowledge
 # Get properties with Environment
 org.springframework.boot.actuate.autoconfigure.endpoint.EndpointIdTimeToLivePropertyFunction.apply
@@ -107,6 +137,21 @@ public Long apply(EndpointId endpointId) {
     String name = String.format("management.endpoint.%s.cache.time-to-live", endpointId.toLowerCaseString());
     BindResult<Duration> duration = Binder.get(this.environment).bind(name, DURATION);
     return duration.map(Duration::toMillis).orElse(null);
+}
+```
+# 实现map的并发安全修改
+org.springframework.boot.actuate.health.DefaultContributorRegistry.registerContributor
+```
+private final Object monitor = new Object();
+@Override
+public void registerContributor(String name, C contributor) {
+    synchronized (this.monitor) {
+        Assert.state(!this.contributors.containsKey(adaptedName),
+                () -> "A contributor named \"" + adaptedName + "\" has already been registered");
+        Map<String, C> contributors = new LinkedHashMap<>(this.contributors);
+        contributors.put(adaptedName, contributor);
+        this.contributors = Collections.unmodifiableMap(contributors);
+    }
 }
 ```
 # ConditionalOnEnabledHealthIndicator 实现原理
