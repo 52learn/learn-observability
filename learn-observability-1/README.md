@@ -73,6 +73,31 @@ curl -X POST -d '{"logLevel":"error","records":"0"}' --header "Content-Type: app
 参考：  
 https://blog.csdn.net/LightOfMiracle/article/details/80594795  
 
+## Get git commit information
+Use info endpoint to expose git properties by git.properties.
+1. how to generate git information(git.properties)  
+add plugin "git-commit-id-plugin" in pom.xml
+```
+<plugin>
+    <groupId>pl.project13.maven</groupId>
+    <artifactId>git-commit-id-plugin</artifactId>
+</plugin>
+```
+2. expose the full content of git.properties
+the info endpoint exposes git.branch,git.commit.id,git.commit.time properties by default. 
+eg:   
+http://192.168.33.1:8081/actuator/info  
+{"git":{"branch":"master","commit":{"id":"96b8929","time":"2022-07-08T02:33:49Z"}}}
+
+config application.yaml to expose the full content:
+```
+management.info.git.mode=full
+```
+3. generate git.properties
+mvn clean compile 
+
+Reference:  
+https://docs.spring.io/spring-boot/docs/2.7.1/reference/html/actuator.html#actuator.endpoints.info.git-commit-information
 
 # Reading Source Code 
 ## default expose endpoints of different types
