@@ -93,11 +93,32 @@ config application.yaml to expose the full content:
 ```
 management.info.git.mode=full
 ```
+ 
+
 3. generate git.properties
-mvn clean compile 
+mvn clean compile , generate META-INF/build-info.properties
 
 Reference:  
 https://docs.spring.io/spring-boot/docs/2.7.1/reference/html/actuator.html#actuator.endpoints.info.git-commit-information
+
+## Get build infromation
+- add plugin to pom.xml： 
+```
+<plugin>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-maven-plugin</artifactId>
+    <executions>
+        <execution>
+            <goals>
+                <goal>build-info</goal>
+            </goals>
+        </execution>
+    </executions>
+</plugin>
+```
+- mvn clean compile 
+
+## Exposes any property from the Environment whose name starts with info.
 
 # Reading Source Code 
 ## default expose endpoints of different types
