@@ -174,6 +174,28 @@ org.springframework.boot.actuate.endpoint.annotation.EndpointDiscoverer.getEndpo
 org.springframework.boot.actuate.autoconfigure.health.HealthEndpointConfiguration.healthContributorRegistry
 org.springframework.boot.actuate.health.DefaultContributorRegistry.DefaultContributorRegistry(java.util.Map<java.lang.String,C>, java.util.function.Function<java.lang.String,java.lang.String>)
 
+## Dynamic configure logger with /loggers endpoint
+- exposure loggers endpoint
+```
+management.endpoints.web.exposure.include=loggers
+```
+- get the all loggers 
+http://127.0.0.1:8081/actuator/loggers
+
+- configure logger level 
+```
+ curl -H "Content-Type:application/json" -X POST -d '{"configuredLevel": "DEBUG"}' http://127.0.0.1:8081/actuator/loggers/com.example.learn.observability.LogLevelConfigController
+```
+
+- restore logger level
+```
+curl -H "Content-Type:application/json" -X POST -d '{"configuredLevel": null}' http://127.0.0.1:8081/actuator/loggers/com.example.learn.observability.LogLevelConfigController
+```
+
+- test logger api
+http://127.0.0.1:8080/log
+
+
 # Learned Knowledge
 # Get properties with Environment
 org.springframework.boot.actuate.autoconfigure.endpoint.EndpointIdTimeToLivePropertyFunction.apply
@@ -217,6 +239,22 @@ protected ConditionOutcome getEndpointOutcome(ConditionContext context, String e
     }
     return null;
 }
+
+```
+# Load bean from spring.factories with SpringFactoriesLoader.loadFactories
+
+sources:  
+org.springframework.boot.context.logging.LoggingApplicationListener.onApplicationEvent  
+org.springframework.boot.logging.LoggingSystem.get(java.lang.ClassLoader)  
+org.springframework.boot.logging.LoggingSystemFactory.fromSpringFactories  
+
+spring.factories :  
+```
+# Logging Systems
+org.springframework.boot.logging.LoggingSystemFactory=\
+org.springframework.boot.logging.logback.LogbackLoggingSystem.Factory,\
+org.springframework.boot.logging.log4j2.Log4J2LoggingSystem.Factory,\
+org.springframework.boot.logging.java.JavaLoggingSystem.Factory
 
 ```
 
