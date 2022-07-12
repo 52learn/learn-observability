@@ -196,6 +196,12 @@ curl -H "Content-Type:application/json" -X POST -d '{"configuredLevel": null}' h
 http://127.0.0.1:8080/log
 
 
+## Registering Custom Metrics
+com.example.learn.observability.QueueBeanPostProcessor
+
+Reference:  
+https://docs.spring.io/spring-boot/docs/2.7.1/reference/html/actuator.html#actuator.metrics.registering-custom
+
 # Learned Knowledge
 # Get properties with Environment
 org.springframework.boot.actuate.autoconfigure.endpoint.EndpointIdTimeToLivePropertyFunction.apply
