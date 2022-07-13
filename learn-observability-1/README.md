@@ -211,6 +211,15 @@ public MeterBinder queueSize(@Qualifier(value = "queue1") Queue queue) {
 Reference:  
 https://docs.spring.io/spring-boot/docs/2.7.1/reference/html/actuator.html#actuator.metrics.registering-custom
 
+## create files: application.pid and application.port
+By default, these writers are not activated, but you can enable them:
+```
+org.springframework.context.ApplicationListener=\
+org.springframework.boot.context.ApplicationPidFileWriter,\
+org.springframework.boot.web.context.WebServerPortFileWriter
+```
+Reference:  
+https://docs.spring.io/spring-boot/docs/2.7.1/reference/html/actuator.html#actuator.process-monitoring
 # Learned Knowledge
 # Get properties with Environment
 org.springframework.boot.actuate.autoconfigure.endpoint.EndpointIdTimeToLivePropertyFunction.apply

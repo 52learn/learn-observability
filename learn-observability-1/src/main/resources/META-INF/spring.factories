@@ -1,3 +1,6 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
 com.example.learn.observability.custom.metrics.CustomMetricsAutoConfiguration,\
 com.example.learn.observability.httptrace.HttpTraceAutoConfiguration
+org.springframework.context.ApplicationListener=\
+org.springframework.boot.context.ApplicationPidFileWriter,\
+org.springframework.boot.web.context.WebServerPortFileWriter
