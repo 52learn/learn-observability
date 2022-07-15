@@ -197,16 +197,8 @@ http://127.0.0.1:8080/log
 
 
 ## Registering Custom Metrics
-com.example.learn.observability.custom.metrics.CustomMetricsAutoConfiguration
-```
-@Bean
-public MeterBinder queueSize(@Qualifier(value = "queue1") Queue queue) {
-    return (registry) -> Gauge
-            .builder("queue1-queueSize", queue::size)
-            .description("queue1 size").baseUnit("个")
-            .register(registry);
-}
-``` 
+- com.example.learn.observability.custom.metrics.CustomMetricsAutoConfiguration  
+- com.example.learn.observability.custom.metrics.MeterBinderBeanRegistrar
 
 Reference:  
 https://docs.spring.io/spring-boot/docs/2.7.1/reference/html/actuator.html#actuator.metrics.registering-custom
